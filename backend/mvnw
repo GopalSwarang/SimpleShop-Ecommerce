@@ -1,0 +1,27 @@
+#!/bin/sh
+set -eu
+BASE="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+MAVEN_VERSION=3.9.11
+MAVEN_HOME="$BASE/.maven/apache-maven-$MAVEN_VERSION"
+MAVEN_ZIP="$BASE/.maven/apache-maven-$MAVEN_VERSION-bin.zip"
+
+if [ ! -x "$MAVEN_HOME/bin/mvn" ]; then
+  echo "Maven is not installed locally. Bootstrapping Maven $MAVEN_VERSION..."
+  mkdir -p "$BASE/.maven"
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/$MAVEN_VERSION/apache-maven-$MAVEN_VERSION-bin.zip" -o "$MAVEN_ZIP"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -q "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/$MAVEN_VERSION/apache-maven-$MAVEN_VERSION-bin.zip" -O "$MAVEN_ZIP"
+  else
+    echo "Install curl or wget, or install Maven manually."
+    exit 1
+  fi
+  if command -v unzip >/dev/null 2>&1; then
+    unzip -q -o "$MAVEN_ZIP" -d "$BASE/.maven"
+  else
+    echo "Install unzip, or install Maven manually."
+    exit 1
+  fi
+fi
+
+exec "$MAVEN_HOME/bin/mvn" "$@"
